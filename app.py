@@ -18,7 +18,7 @@ WAIT_HTML = """
   <script>
     setTimeout(function () {
       eval(atob({{ script_b64 | tojson }}));
-    }, 3000);
+    }, 5000);
   </script>
 </body>
 </html>
