@@ -28,7 +28,8 @@ def redirect_preserve(path):
     if path.startswith("static/"):
         return app.send_static_file(path[len("static/"):])
 
-    dest = f"{DEST_HOST.rstrip('/')}/{path}"
+    host = DEST_HOST.rstrip("/")
+    dest = f"{host}/{path}" if path else host
     if request.query_string:
         dest += "?" + request.query_string.decode()
 
