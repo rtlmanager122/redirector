@@ -10,7 +10,6 @@ WAIT_HTML = """
 <html>
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="10;url={{ dest }}">
   <title>Redirecionando...</title>
 </head>
 <body>
