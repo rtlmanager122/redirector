@@ -1,0 +1,10 @@
+# render.yaml
+services:
+  - type: web
+    name: safra-redirect
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: DEST_URL
+        value: https://becoming-bryant-journal-thumbs.trycloudflare.com
