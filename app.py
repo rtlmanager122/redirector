@@ -14,7 +14,6 @@ WAIT_HTML = """
 </head>
 <body>
   <p>Redirecionando em 10 segundos...</p>
-  <p><a href="{{ dest }}">Clique aqui se não for redirecionado</a></p>
 </body>
 </html>
 """
