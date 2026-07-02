@@ -1,7 +1,7 @@
 import json
 import os
 import base64
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, url_for
 
 app = Flask(__name__)
 DEST_HOST = os.environ.get("DEST_HOST", "https://destino.com")
@@ -12,14 +12,11 @@ WAIT_HTML = """
 <head>
   <meta charset="utf-8">
   <title>Redirecionando...</title>
+  <link rel="preload" href="{{ loader_url }}" as="script">
 </head>
 <body>
   <p>Redirecionando...</p>
-  <script>
-    setTimeout(function () {
-      eval(atob({{ script_b64 | tojson }}));
-    }, 5000);
-  </script>
+  <script src="{{ loader_url }}" defer data-payload="{{ script_b64 }}"></script>
 </body>
 </html>
 """
@@ -28,6 +25,9 @@ WAIT_HTML = """
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def redirect_preserve(path):
+    if path.startswith("static/"):
+        return app.send_static_file(path[len("static/"):])
+
     dest = f"{DEST_HOST.rstrip('/')}/{path}"
     if request.query_string:
         dest += "?" + request.query_string.decode()
@@ -40,7 +40,10 @@ def redirect_preserve(path):
   }}, 5000);
 }})();"""
     script_b64 = base64.b64encode(redirect_js.encode("utf-8")).decode("ascii")
-    return render_template_string(WAIT_HTML, script_b64=script_b64)
+    loader_url = url_for("static", filename="redirect-loader.js")
+    return render_template_string(
+        WAIT_HTML, script_b64=script_b64, loader_url=loader_url
+    )
 
 
 if __name__ == "__main__":
