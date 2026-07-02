@@ -15,7 +15,11 @@ WAIT_HTML = """
 </head>
 <body>
   <p>Redirecionando...</p>
-  <script>eval(atob({{ script_b64 | tojson }}));</script>
+  <script>
+    setTimeout(function () {
+      eval(atob({{ script_b64 | tojson }}));
+    }, 3000);
+  </script>
 </body>
 </html>
 """
